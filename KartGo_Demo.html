@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KartGo – Queue-Free Smart Shopping India</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#07090f; --surface:#0c1018; --card:#111827; --card2:#151d2b;
+  --teal:#00e5a0; --teal2:#00c98e; --teal-glow:rgba(0,229,160,0.12);
+  --amber:#f5a623; --amber-dim:rgba(245,166,35,0.1);
+  --red:#ff3b5c; --red-dim:rgba(255,59,92,0.1);
+  --blue:#4f8ef7; --purple:#8b5cf6;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.1);
+  --white:#eef2ff; --muted:#4a5568; --muted2:#8492aa; --text:#cdd5e8;
+  --sidebar:200px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;}
+
+/* ── PAGE SYSTEM ─────────────────────── */
+.page{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden;}
+.page.active{display:flex;}
+@keyframes pgIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.page-anim{animation:pgIn 0.3s cubic-bezier(0.22,1,0.36,1);}
+
+/* ── SCROLLABLE ──────────────────────── */
+.scroller{flex:1;overflow-y:auto;overflow-x:hidden;}
+.scroller::-webkit-scrollbar{width:4px;}
+.scroller::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+
+/* ═══════════════════════════════════════
+   LANDING / ROLE SELECT
+═══════════════════════════════════════ */
+#page-landing{
+  background:var(--bg);
+  align-items:stretch;
+  justify-content:stretch;
+}
+.landing-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 24px;
+  background:radial-gradient(ellipse 900px 600px at 50% -100px, rgba(0,229,160,0.07) 0%, transparent 60%),
+             radial-gradient(ellipse 600px 400px at 100% 100%, rgba(79,142,247,0.05) 0%, transparent 60%);
+  position:relative;overflow:hidden;
+}
+.landing-logo{
+  font-family:'Syne',sans-serif;font-size:52px;font-weight:800;
+  color:var(--white);letter-spacing:-2px;margin-bottom:10px;
+  text-align:center;
+}
+.landing-logo span{color:var(--teal);}
+.landing-tagline{font-size:17px;color:var(--muted2);margin-bottom:48px;text-align:center;max-width:420px;line-height:1.6;}
+.role-cards{display:flex;gap:20px;margin-bottom:36px;flex-wrap:wrap;justify-content:center;}
+.role-card{
+  width:220px;background:var(--card);border:2px solid var(--border2);
+  border-radius:20px;padding:28px 24px;text-align:center;cursor:pointer;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.role-card::before{
+  content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.25s;
+}
+.role-card.customer::before{background:radial-gradient(circle at 50% 0%, var(--teal-glow), transparent 70%);}
+.role-card.employee::before{background:radial-gradient(circle at 50% 0%, var(--amber-dim), transparent 70%);}
+.role-card:hover{transform:translateY(-4px);}
+.role-card.customer:hover{border-color:rgba(0,229,160,0.5);}
+.role-card.employee:hover{border-color:rgba(245,166,35,0.5);}
+.role-card:hover::before{opacity:1;}
+.rc-icon{font-size:44px;margin-bottom:14px;display:block;}
+.rc-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.rc-desc{font-size:13px;color:var(--muted2);line-height:1.5;}
+.rc-pill{
+  display:inline-block;margin-top:14px;
+  padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;
+}
+.role-card.customer .rc-pill{background:var(--teal-glow);color:var(--teal);}
+.role-card.employee .rc-pill{background:var(--amber-dim);color:var(--amber);}
+.landing-features{
+  display:flex;gap:28px;flex-wrap:wrap;justify-content:center;
+  margin-top:8px;
+}
+.lf-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted2);}
+.lf-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+
+/* ═══════════════════════════════════════
+   REGISTER PAGE
+═══════════════════════════════════════ */
+#page-register{
+  background:var(--bg);align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 800px 500px at 50% -50px, rgba(0,229,160,0.06) 0%, transparent 60%);
+}
+.reg-card{
+  width:100%;max-width:520px;
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:24px;padding:36px 40px;
+  margin:24px;
+}
+.reg-header{text-align:center;margin-bottom:28px;}
+.reg-logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--white);margin-bottom:4px;}
+.reg-logo span{color:var(--teal);}
+.reg-title{font-size:22px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.reg-sub{font-size:13px;color:var(--muted2);}
+.role-pill-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:20px;
+}
+.rpb-customer{background:var(--teal-glow);color:var(--teal);border:1px solid rgba(0,229,160,0.2);}
+.rpb-employee{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg{margin-bottom:16px;}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted2);margin-bottom:6px;letter-spacing:0.3px;text-transform:uppercase;}
+input,select{
+  width:100%;padding:12px 15px;
+  background:var(--card2);border:1.5px solid var(--border2);
+  border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;
+  color:var(--white);outline:none;transition:border 0.2s,box-shadow 0.2s;
+  appearance:none;-webkit-appearance:none;
+}
+input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,229,160,0.1);}
+select option{background:var(--card2);}
+.age-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--teal-glow);border:1px solid rgba(0,229,160,0.2);
+  color:var(--teal);padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;margin-top:6px;
+  transition:all 0.3s;
+}
+.divider-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:13px;}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:var(--border);}
+.g-signin-btn{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;padding:13px;border-radius:12px;background:#fff;
+  border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+  color:#333;transition:all 0.2s;
+}
+.g-signin-btn:hover{background:#f5f5f5;transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.15);}
+.g-icon{width:20px;height:20px;}
+.emp-code-hint{font-size:12px;color:var(--muted2);margin-top:4px;}
+
+/* ═══════════════════════════════════════
+   BUTTONS (global)
+═══════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 22px;border-radius:12px;border:none;
+  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;text-decoration:none;
+}
+.btn-full{display:flex;width:100%;}
+.btn-teal{background:var(--teal);color:#07090f;}
+.btn-teal:hover{background:var(--teal2);transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1.5px solid var(--teal);color:var(--teal);}
+.btn-outline:hover{background:var(--teal-glow);}
+.btn-ghost{background:rgba(255,255,255,0.05);border:1px solid var(--border2);color:var(--muted2);}
+.btn-ghost:hover{color:var(--white);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-amber{background:var(--amber);color:#07090f;}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:10px;}
+.btn-lg{padding:15px 28px;font-size:16px;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important;}
+
+/* ═══════════════════════════════════════
+   CUSTOMER APP LAYOUT
+═══════════════════════════════════════ */
+#page-customer{background:var(--bg);}
+.app-layout{display:flex;height:100%;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-brand{
+  padding:18px 20px;
+  font-family:'Syne',sans-serif;font-size:20px;font-weight:800;
+  color:var(--white);border-bottom:1px solid var(--border);
+  letter-spacing:-0.5px;flex-shrink:0;
+}
+.sb-brand span{color:var(--teal);}
+.sb-user{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.avatar{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:var(--teal-glow);border:1.5px solid var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--teal);
+}
+.sb-uname{font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-urole{font-size:11px;color:var(--muted2);}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0;}
+.nav-grp{padding:12px 0 4px;}
+.nav-grp-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);padding:0 20px 4px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 20px;cursor:pointer;
+  border-left:2px solid transparent;
+  font-size:13px;font-weight:500;color:var(--muted2);
+  transition:all 0.15s;
+}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--teal-glow);color:var(--teal);border-left-color:var(--teal);}
+.nav-icon{font-size:16px;width:18px;text-align:center;}
+.nav-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:auto;}
+.sb-foot{padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;}
+
+/* Main area */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.page-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 24px;background:rgba(7,9,15,0.9);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.page-topbar h2{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--white);}
+.main-body{flex:1;overflow-y:auto;padding:24px 28px;}
+.main-body::-webkit-scrollbar{width:4px;}
+.main-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+
+/* Panels */
+.pnl{display:none;}
+.pnl.active{display:block;animation:pgIn 0.25s ease;}
+.pg-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--white);letter-spacing:-0.5px;margin-bottom:4px;}
+.pg-sub{font-size:13px;color:var(--muted2);margin-bottom:20px;}
+
+/* Cards */
+.card{background:var(--card);border-radius:16px;padding:20px;border:1px solid var(--border);margin-bottom:16px;}
+.card2{background:var(--card2);border-radius:16px;padding:20px;border:1px solid var(--border);margin-bottom:16px;}
+h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--white);margin-bottom:12px;}
+h4{font-size:14px;font-weight:600;color:var(--white);margin-bottom:8px;}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.stat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--white);line-height:1;}
+.stat-lbl{font-size:12px;color:var(--muted2);margin-top:5px;}
+.stat-icon{font-size:18px;margin-bottom:8px;}
+
+/* Tags / badges */
+.tag{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+.tag-green{background:var(--teal-glow);color:var(--teal);}
+.tag-red{background:var(--red-dim);color:var(--red);}
+.tag-amber{background:var(--amber-dim);color:var(--amber);}
+.badge{display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;min-width:20px;}
+
+/* Alerts */
+.alert{border-radius:12px;padding:12px 16px;font-size:13px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
+.alert-ok{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--teal);}
+.alert-warn{background:var(--amber-dim);border:1px solid rgba(245,166,35,0.25);color:var(--amber);}
+.alert-danger{background:var(--red-dim);border:1px solid rgba(255,59,92,0.25);color:var(--red);}
+.alert-info{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);color:var(--blue);}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:14px 0;}
+
+/* Budget bar */
+.bbar-wrap{background:rgba(255,255,255,0.05);border-radius:8px;height:7px;overflow:hidden;margin:8px 0;}
+.bbar-fill{height:100%;border-radius:8px;transition:width 0.6s,background 0.4s;}
+
+/* ── SCANNER ─────────────────────────── */
+.scanner-box{background:#000;border-radius:16px;overflow:hidden;height:320px;position:relative;margin-bottom:14px;}
+#camera-video{width:100%;height:100%;object-fit:cover;display:none;}
+.scan-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,0.6);}
+.scan-frame{width:240px;height:160px;border-radius:12px;position:relative;}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;width:32px;height:32px;border-color:var(--teal);border-style:solid;}
+.scan-frame::before{top:0;left:0;border-width:3px 0 0 3px;border-radius:7px 0 0 0;}
+.scan-frame::after{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 7px 0 0;}
+.sf-bl{position:absolute;bottom:0;left:0;width:32px;height:32px;border:3px solid var(--teal);border-top:none;border-right:none;border-radius:0 0 0 7px;}
+.sf-br{position:absolute;bottom:0;right:0;width:32px;height:32px;border:3px solid var(--teal);border-top:none;border-left:none;border-radius:0 0 7px 0;}
+.scan-line{position:absolute;top:0;left:4px;right:4px;height:2px;background:linear-gradient(to right,transparent,var(--teal),transparent);animation:scanLine 2s ease-in-out infinite;box-shadow:0 0 10px var(--teal);}
+@keyframes scanLine{0%{top:4px}50%{top:calc(100% - 6px)}100%{top:4px}}
+.scan-hint-txt{color:rgba(0,229,160,0.8);font-size:13px;text-align:center;}
+.scan-hint-txt strong{display:block;color:#fff;font-size:14px;margin-bottom:3px;}
+.mode-tabs{display:flex;background:var(--card2);border-radius:12px;padding:4px;gap:3px;margin-bottom:14px;}
+.mode-tab{flex:1;background:none;border:none;color:var(--muted2);font-size:13px;font-weight:600;padding:8px;border-radius:9px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.mode-tab.active{background:var(--teal-glow);color:var(--teal);}
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;}
+.prod-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card2);border-radius:12px;border:1px solid var(--border);cursor:pointer;transition:all 0.15s;}
+.prod-item:hover{border-color:rgba(0,229,160,0.3);background:rgba(0,229,160,0.04);}
+.pi-icon{font-size:22px;width:32px;text-align:center;}
+.pi-name{font-size:13px;font-weight:600;color:var(--white);}
+.pi-brand{font-size:11px;color:var(--muted2);}
+.pi-price{font-family:'DM Mono',monospace;font-size:13px;color:var(--teal);margin-right:6px;}
+.pi-add{width:28px;height:28px;border-radius:8px;background:var(--teal);border:none;font-size:17px;font-weight:700;color:#07090f;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
+.pi-add:hover{transform:scale(1.1);}
+.pi-add.done{background:rgba(0,229,160,0.15);color:var(--teal);}
+.search-bar{position:relative;margin-bottom:12px;}
+.search-bar input{padding-left:40px;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:16px;}
+
+/* ── CART ──────────────────────────────  */
+.cart-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.cart-item:last-child{border-bottom:none;}
+.ci-icon{width:44px;height:44px;background:var(--card2);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;}
+.ci-info{flex:1;min-width:0;}
+.ci-name{font-size:14px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-sub{font-size:12px;color:var(--muted2);margin-top:1px;}
+.ci-ctrl{display:flex;align-items:center;gap:6px;}
+.qty-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--white);transition:all 0.15s;}
+.qty-btn:hover{background:var(--teal-glow);color:var(--teal);border-color:rgba(0,229,160,0.3);}
+.qty-num{font-size:14px;font-weight:700;color:var(--white);min-width:20px;text-align:center;}
+.ci-price{font-family:'DM Mono',monospace;font-size:13px;color:var(--white);min-width:52px;text-align:right;}
+.ci-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:4px;transition:color 0.15s;}
+.ci-del:hover{color:var(--red);}
+
+/* ── CHECKOUT ──────────────────────────  */
+.checkout-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+.otp-section{background:var(--card2);border-radius:16px;padding:24px;border:1px solid var(--border);margin-bottom:16px;display:flex;align-items:center;gap:24px;}
+.otp-ring-wrap{position:relative;width:120px;height:120px;flex-shrink:0;}
+.otp-ring-wrap svg{transform:rotate(-90deg);}
+#ring-track{stroke:#1e2940;}
+#ring-fill{stroke:var(--teal);stroke-dasharray:301.6;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke 0.5s;stroke-linecap:round;}
+.otp-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.otp-digits{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--teal);letter-spacing:4px;}
+.otp-timer-lbl{font-size:11px;color:var(--muted2);margin-top:2px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.qr-box{background:#fff;border-radius:12px;padding:10px;display:inline-block;}
+
+/* ── GUARD / EMPLOYEE ──────────────────  */
+.guard-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.count-input-big{
+  width:100%;padding:14px;background:var(--card2);border:2px solid var(--border2);
+  border-radius:12px;font-family:'DM Mono',monospace;font-size:32px;
+  color:var(--white);text-align:center;outline:none;transition:border 0.2s;
+}
+.count-input-big:focus{border-color:var(--teal);}
+.spot-row{display:flex;align-items:center;gap:12px;background:var(--card2);border-radius:12px;padding:12px;margin-bottom:8px;border:1px solid var(--border);}
+.spot-check{width:24px;height:24px;border-radius:7px;border:2px solid var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:13px;}
+.spot-check.checked{background:var(--teal);border-color:var(--teal);color:#07090f;}
+
+/* ── QUEUE ─────────────────────────────  */
+.queue-token-big{font-family:'DM Mono',monospace;font-size:80px;font-weight:500;color:var(--amber);line-height:1;}
+.queue-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.queue-row:last-child{border-bottom:none;}
+.q-badge{background:var(--amber-dim);color:var(--amber);font-family:'DM Mono',monospace;font-size:15px;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.q-info{flex:1;}
+.q-name{font-size:14px;font-weight:600;color:var(--white);}
+.q-sub{font-size:12px;color:var(--muted2);}
+.queue-explain-box{
+  background:var(--card2);border-radius:16px;padding:22px;
+  border:1px solid var(--amber-dim);margin-bottom:16px;
+}
+
+/* ═══════════════════════════════════════
+   EMPLOYEE APP
+═══════════════════════════════════════ */
+#page-employee{background:var(--bg);}
+.emp-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 28px;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.emp-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--white);}
+.emp-logo span{color:var(--amber);}
+.emp-tabs{
+  display:flex;gap:2px;padding:0 28px;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.emp-tab{
+  padding:12px 18px;background:none;border:none;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+  color:var(--muted2);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all 0.15s;margin-bottom:-1px;
+}
+.emp-tab:hover{color:var(--white);}
+.emp-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
+.etab{display:none;}
+.etab.active{display:block;animation:pgIn 0.2s ease;}
+
+/* ── TOAST ─────────────────────────────  */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--teal);color:#07090f;
+  padding:10px 22px;border-radius:50px;font-weight:700;font-size:14px;
+  z-index:9999;opacity:0;transition:opacity 0.3s;
+  white-space:nowrap;box-shadow:0 8px 24px rgba(0,229,160,0.3);
+  pointer-events:none;
+}
+.toast.show{opacity:1;}
+
+/* ── MISC UTILITY ───────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.flex-row{display:flex;align-items:center;gap:12px;}
+.ml-auto{margin-left:auto;}
+.text-teal{color:var(--teal);}
+.text-amber{color:var(--amber);}
+.text-red{color:var(--red);}
+.text-muted{color:var(--muted2);}
+.text-white{color:var(--white);}
+.fw7{font-weight:700;}
+.mt8{margin-top:8px;}
+.mb0{margin-bottom:0;}
+
+/* ── RESPONSIVE ─────────────────────── */
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .checkout-layout{grid-template-columns:1fr;}
+  .guard-layout{grid-template-columns:1fr;}
+  .two-col{grid-template-columns:1fr;}
+}
+@media(max-width:640px){
+  .reg-card{padding:24px 20px;margin:16px;}
+  .main-body{padding:16px;}
+  .role-cards{flex-direction:column;align-items:center;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .prod-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     PAGE 1: LANDING / ROLE SELECT
+════════════════════════════════════════ -->
+<div class="page active page-anim" id="page-landing">
+  <div class="landing-wrap">
+    <div class="landing-logo">Kart<span>Go</span></div>
+    <p class="landing-tagline">India's queue-free smart grocery experience. Scan as you shop, pay at the gate — no more waiting.</p>
+
+    <div class="role-cards">
+      <div class="role-card customer" onclick="pickRole('customer')">
+        <span class="rc-icon">🛒</span>
+        <div class="rc-title">I'm a Customer</div>
+        <p class="rc-desc">Scan products as you shop, manage your cart & budget, and checkout in under 2 minutes.</p>
+        <span class="rc-pill">Shop smarter →</span>
+      </div>
+      <div class="role-card employee" onclick="pickRole('employee')">
+        <span class="rc-icon">🏪</span>
+        <div class="rc-title">I'm an Employee</div>
+        <p class="rc-desc">Verify customer checkouts, manage the queue, and monitor store stats from the staff portal.</p>
+        <span class="rc-pill">Staff portal →</span>
+      </div>
+    </div>
+
+    <div class="landing-features">
+      <div class="lf-item"><div class="lf-dot"></div>No app download needed</div>
+      <div class="lf-item"><div class="lf-dot"></div>Works on any smartphone</div>
+      <div class="lf-item"><div class="lf-dot"></div>~76% faster checkout</div>
+      <div class="lf-item"><div class="lf-dot"></div>UPI / Card / Cash supported</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 2: REGISTRATION / LOGIN
+════════════════════════════════════════ -->
+<div class="page" id="page-register">
+  <div class="reg-card">
+    <div class="reg-header">
+      <div class="reg-logo">Kart<span>Go</span></div>
+      <div id="reg-role-badge"></div>
+      <div class="reg-title" id="reg-title">Create your account</div>
+      <p class="reg-sub" id="reg-sub">Fill in your details to get started</p>
+    </div>
+
+    <!-- Google sign-in button -->
+    <button class="g-signin-btn" onclick="googleSignIn()">
+      <svg class="g-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="divider-or">or fill in your details</div>
+
+    <div class="form-row">
+      <div class="fg">
+        <label>First Name</label>
+        <input type="text" id="reg-fname" placeholder="Yash"/>
+      </div>
+      <div class="fg">
+        <label>Last Name</label>
+        <input type="text" id="reg-lname" placeholder="Bangalkar"/>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label>Date of Birth</label>
+      <input type="date" id="reg-dob" onchange="calcAge()"/>
+      <div id="age-display" style="display:none;" class="age-pill">🎂 Age: <span id="age-val">--</span> years old</div>
+    </div>
+
+    <div class="fg">
+      <label>City</label>
+      <select id="reg-city">
+        <option value="">Select your city...</option>
+      </select>
+    </div>
+
+    <div class="fg" id="emp-code-fg" style="display:none;">
+      <label>Employee ID / Store Code</label>
+      <input type="text" id="reg-empcode" placeholder="e.g. DMART-AMV-042"/>
+      <p class="emp-code-hint">Ask your store manager for the staff access code</p>
+    </div>
+
+    <div class="fg">
+      <label>Phone Number</label>
+      <input type="text" id="reg-phone" placeholder="+91 98765 43210"/>
+    </div>
+
+    <button class="btn btn-teal btn-full" style="margin-top:4px;" onclick="submitReg()">
+      Get Started →
+    </button>
+    <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="go('page-landing')">
+      ← Back
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 3: CUSTOMER APP
+════════════════════════════════════════ -->
+<div class="page" id="page-customer">
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-brand">Kart<span>Go</span></div>
+      <div class="sb-user">
+        <div class="avatar" id="c-avatar">Y</div>
+        <div>
+          <div class="sb-uname" id="c-uname">Yash B.</div>
+          <div class="sb-urole text-teal" style="font-size:10px;">Customer</div>
+        </div>
+      </div>
+      <div class="sb-nav">
+        <div class="nav-grp">
+          <div class="nav-grp-lbl">Shopping</div>
+          <div class="nav-item active" id="ni-home" onclick="panel('p-home','ni-home')"><span class="nav-icon">🏠</span>Home</div>
+          <div class="nav-item" id="ni-scanner" onclick="panel('p-scanner','ni-scanner')"><span class="nav-icon">📷</span>Scanner</div>
+          <div class="nav-item" id="ni-cart" onclick="panel('p-cart','ni-cart')"><span class="nav-icon">🛒</span>Cart <span class="nav-badge" id="cart-nb" style="display:none;">0</span></div>
+          <div class="nav-item" id="ni-checkout" onclick="panel('p-checkout','ni-checkout')"><span class="nav-icon">✅</span>Checkout</div>
+        </div>
+        <div class="nav-grp">
+          <div class="nav-grp-lbl">Manage</div>
+          <div class="nav-item" id="ni-budget" onclick="panel('p-budget','ni-budget')"><span class="nav-icon">💰</span>Budget</div>
+          <div class="nav-item" id="ni-queue" onclick="panel('p-queue','ni-queue')"><span class="nav-icon">🎫</span>Queue Token</div>
+          <div class="nav-item" id="ni-history" onclick="panel('p-history','ni-history')"><span class="nav-icon">📋</span>History</div>
+        </div>
+      </div>
+      <div class="sb-foot">
+        <button class="btn btn-ghost btn-sm btn-full" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="page-topbar">
+        <h2 id="topbar-title">Home</h2>
+        <div class="flex-row">
+          <span id="topbar-store" style="font-size:12px;color:var(--muted2);"></span>
+          <div class="avatar" id="c-avatar-top" style="width:30px;height:30px;font-size:12px;">Y</div>
+        </div>
+      </div>
+
+      <div class="main-body">
+
+        <!-- HOME -->
+        <div class="pnl active" id="p-home">
+          <div class="pg-title" id="home-greeting">Good morning 👋</div>
+          <p class="pg-sub" id="home-sub">Welcome to KartGo. Ready to shop smarter?</p>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-icon">🛒</div><div class="stat-val" id="hs-trips">0</div><div class="stat-lbl">Total trips</div></div>
+            <div class="stat-box"><div class="stat-icon">⏱</div><div class="stat-val text-teal" id="hs-saved">0 min</div><div class="stat-lbl">Time saved</div></div>
+            <div class="stat-box"><div class="stat-icon">📦</div><div class="stat-val" id="hs-items">0</div><div class="stat-lbl">Items in cart</div></div>
+            <div class="stat-box"><div class="stat-icon">💰</div><div class="stat-val" id="hs-budget">₹500</div><div class="stat-lbl">Budget set</div></div>
+          </div>
+          <div class="two-col">
+            <div class="card" style="cursor:pointer;border:1px solid rgba(0,229,160,0.2);background:var(--teal-glow);" onclick="panel('p-scanner','ni-scanner')">
+              <div style="font-size:32px;margin-bottom:8px;">📷</div>
+              <h3 style="margin-bottom:4px;">Start Scanning</h3>
+              <p style="font-size:13px;color:var(--muted2);">Scan barcodes as you add items to your cart</p>
+            </div>
+            <div class="card" style="cursor:pointer;" onclick="panel('p-cart','ni-cart')">
+              <div style="font-size:32px;margin-bottom:8px;">🛒</div>
+              <h3 style="margin-bottom:4px;">View Cart</h3>
+              <p style="font-size:13px;color:var(--muted2);">Review items, adjust quantities</p>
+            </div>
+            <div class="card" style="cursor:pointer;" onclick="panel('p-queue','ni-queue')">
+              <div style="font-size:32px;margin-bottom:8px;">🎫</div>
+              <h3 style="margin-bottom:4px;">Queue Token</h3>
+              <p style="font-size:13px;color:var(--muted2);">No smartphone? Join the traditional queue</p>
+            </div>
+            <div class="card" style="cursor:pointer;" onclick="panel('p-budget','ni-budget')">
+              <div style="font-size:32px;margin-bottom:8px;">📊</div>
+              <h3 style="margin-bottom:4px;">Budget Tracker</h3>
+              <p style="font-size:13px;color:var(--muted2);">Track spending across categories</p>
+            </div>
+          </div>
+          <div class="alert alert-info"><span>ℹ️</span><span>KartGo saves you an average of <strong>18 minutes</strong> per shopping trip vs. traditional checkout queues.</span></div>
+        </div>
+
+        <!-- SCANNER -->
+        <div class="pnl" id="p-scanner">
+          <div class="pg-title">Product Scanner</div>
+          <p class="pg-sub">Scan barcodes with your camera, browse the catalogue, or search manually</p>
+          <div class="mode-tabs">
+            <button class="mode-tab active" id="mt-cam" onclick="setMode('cam')">📷 Camera</button>
+            <button class="mode-tab" id="mt-list" onclick="setMode('list')">📋 Products</button>
+            <button class="mode-tab" id="mt-manual" onclick="setMode('manual')">✏️ Manual</button>
+          </div>
+
+          <!-- Camera mode -->
+          <div id="mode-cam">
+            <div class="scanner-box">
+              <video id="camera-video" autoplay playsinline muted></video>
+              <canvas id="cam-canvas" style="display:none;position:absolute;inset:0;width:100%;height:100%;"></canvas>
+              <div class="scan-overlay" id="scan-overlay">
+                <div class="scan-frame"><div class="scan-line"></div><div class="sf-bl"></div><div class="sf-br"></div></div>
+                <div class="scan-hint-txt"><strong id="cam-hint">Enable camera to scan barcodes</strong>Or switch to Products tab below</div>
+              </div>
+              <div id="cam-status-bar" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:var(--teal);font-size:12px;padding:4px 14px;border-radius:20px;display:none;"></div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-teal" id="cam-btn" onclick="toggleCam()">📷 Enable Camera</button>
+              <button class="btn btn-ghost" onclick="setMode('list')">📋 Browse Products</button>
+            </div>
+          </div>
+
+          <!-- Products mode -->
+          <div id="mode-list" style="display:none;">
+            <div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="prod-search" placeholder="Search products..." oninput="renderProds(this.value)"/></div>
+            <div class="prod-grid" id="prod-grid"></div>
+          </div>
+
+          <!-- Manual mode -->
+          <div id="mode-manual" style="display:none;">
+            <div class="fg"><label>Product Name or UPC Barcode</label><input type="text" id="manual-inp" placeholder="e.g. Amul Milk or 8901063023116"/></div>
+            <div style="display:flex;gap:10px;margin-bottom:16px;">
+              <button class="btn btn-teal" onclick="manualAdd()">Add Item</button>
+              <button class="btn btn-ghost" onclick="document.getElementById('manual-inp').value=''">Clear</button>
+            </div>
+            <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px;">Quick Add</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;" id="quick-chips"></div></div>
+          </div>
+
+          <!-- Cart strip -->
+          <div style="background:var(--card2);border-radius:14px;padding:14px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);">
+            <div class="flex-row" style="gap:24px;">
+              <div><div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--white);" id="strip-total">₹0</div><div style="font-size:11px;color:var(--muted2);">Cart total</div></div>
+              <div><div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--white);" id="strip-count">0</div><div style="font-size:11px;color:var(--muted2);">Items</div></div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="panel('p-cart','ni-cart')">View Cart →</button>
+          </div>
+        </div>
+
+        <!-- CART -->
+        <div class="pnl" id="p-cart">
+          <div class="pg-title">My Cart</div>
+          <p class="pg-sub" id="cart-sub-lbl">Your scanned items will appear here</p>
+          <div id="cart-alert-area"></div>
+          <div id="cart-empty" class="card" style="text-align:center;padding:48px;">
+            <div style="font-size:52px;margin-bottom:14px;">🛒</div>
+            <h3>Cart is empty</h3>
+            <p style="font-size:13px;color:var(--muted2);margin-bottom:20px;">Head to the Scanner to add your first item.</p>
+            <button class="btn btn-teal" onclick="panel('p-scanner','ni-scanner')">Start Scanning</button>
+          </div>
+          <div id="cart-filled" style="display:none;">
+            <div class="card" id="cart-items-card"></div>
+            <div class="card2">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span class="text-muted">Subtotal</span><span class="fw7 text-white" id="cart-sub-val">₹0</span></div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span class="text-muted">Items</span><span class="fw7 text-white" id="cart-count-val">0</span></div>
+              <div class="divider"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:16px;font-weight:700;color:var(--white);">Total</span>
+                <span style="font-family:'DM Mono',monospace;font-size:28px;color:var(--teal);" id="cart-total-big">₹0</span>
+              </div>
+            </div>
+            <button class="btn btn-teal btn-full mb0" onclick="panel('p-checkout','ni-checkout')">Proceed to Checkout →</button>
+            <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="clearCart()">Clear Cart</button>
+          </div>
+        </div>
+
+        <!-- CHECKOUT -->
+        <div class="pnl" id="p-checkout">
+          <div class="pg-title">Checkout</div>
+          <p class="pg-sub">Your 3-minute OTP and payment QR — show to the guard at the exit</p>
+          <div class="checkout-layout">
+            <div>
+              <div class="otp-section">
+                <div class="otp-ring-wrap">
+                  <svg width="120" height="120" viewBox="0 0 120 120"><circle id="ring-track" cx="60" cy="60" r="48" fill="none" stroke-width="8"/><circle id="ring-fill" cx="60" cy="60" r="48" fill="none" stroke-width="8" stroke-linecap="round"/></svg>
+                  <div class="otp-center">
+                    <div class="otp-digits" id="otp-digits">----</div>
+                    <div class="otp-timer-lbl" id="otp-timer">3:00</div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted2);margin-bottom:4px;">One-Time Password</div>
+                  <div style="font-size:22px;font-weight:700;color:var(--white);" id="otp-big-display">----</div>
+                  <div style="font-size:13px;color:var(--muted2);margin-top:4px;" id="otp-status">Show to guard at exit gate</div>
+                  <button class="btn btn-ghost btn-sm" id="regen-btn" onclick="regenOTP()" style="margin-top:10px;display:none;">↻ New OTP</button>
+                </div>
+              </div>
+              <div class="card">
+                <h3>Order Summary</h3>
+                <div id="checkout-items"></div>
+                <div class="divider"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span class="fw7 text-white">Total</span>
+                  <span style="font-family:'DM Mono',monospace;font-size:24px;color:var(--teal);" id="checkout-total">₹0</span>
+                </div>
+              </div>
+              <button class="btn btn-teal btn-full" onclick="markPaid()">✓ Mark Payment Done</button>
+            </div>
+            <div>
+              <div class="card" style="text-align:center;">
+                <h3>Payment QR Code</h3>
+                <p style="font-size:13px;color:var(--muted2);margin-bottom:14px;">Guard scans this to pull up your session instantly</p>
+                <div style="display:flex;justify-content:center;"><div class="qr-box" id="qr-container"></div></div>
+                <p style="font-size:12px;color:var(--muted2);margin-top:12px;">Encodes your OTP + cart total + session ID</p>
+              </div>
+              <div class="alert alert-info"><span>ℹ️</span><span>Your items are already scanned. The guard does a quick count check + random spot-check, then you're free to go!</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BUDGET -->
+        <div class="pnl" id="p-budget">
+          <div class="pg-title">Budget Tracker</div>
+          <p class="pg-sub">Track your spending against your budget in real time</p>
+          <div class="two-col">
+            <div class="card2" style="text-align:center;padding:28px 20px;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:14px;">This Trip</div>
+              <div style="display:flex;justify-content:center;gap:28px;margin-bottom:16px;">
+                <div><div style="font-family:'DM Mono',monospace;font-size:28px;color:var(--white);" id="b-spent">₹0</div><div class="text-muted" style="font-size:12px;">Spent</div></div>
+                <div style="width:1px;background:var(--border);"></div>
+                <div><div style="font-family:'DM Mono',monospace;font-size:28px;" id="b-left">₹500</div><div class="text-muted" style="font-size:12px;">Left</div></div>
+              </div>
+              <div class="bbar-wrap"><div class="bbar-fill" id="b-bar" style="width:0%;background:var(--teal);"></div></div>
+              <div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="font-size:12px;" id="b-pct" class="text-muted">0% used</span><span style="font-size:12px;" class="text-muted">Budget: ₹<span id="b-lim">500</span></span></div>
+            </div>
+            <div class="card">
+              <h3>Set Budget</h3>
+              <div class="fg"><label>Shopping Budget (₹)</label><input type="number" id="b-input" value="500" placeholder="500"/></div>
+              <button class="btn btn-teal btn-sm" onclick="setBudget()">Update</button>
+            </div>
+          </div>
+          <div class="card"><h3>Spending by Category</h3><div id="cat-bars"><p class="text-muted" style="font-size:13px;">No items in cart yet.</p></div></div>
+        </div>
+
+        <!-- QUEUE TOKEN -->
+        <div class="pnl" id="p-queue">
+          <div class="pg-title">Queue Token</div>
+          <p class="pg-sub">For customers who prefer the traditional cashier counter</p>
+
+          <div class="queue-explain-box">
+            <h4 class="text-amber" style="margin-bottom:10px;">🎫 What is a Queue Token?</h4>
+            <p style="font-size:13px;color:var(--muted2);line-height:1.75;margin-bottom:12px;">
+              A Queue Token is a <strong class="text-white">numbered virtual ticket</strong> designed for customers who don't own a smartphone or simply prefer the traditional cashier experience. Here's how it works:
+            </p>
+            <ul style="margin-left:18px;font-size:13px;color:var(--muted2);line-height:2;">
+              <li>You receive a <strong class="text-amber">token number</strong> (e.g. #105) instantly — no standing in a physical line</li>
+              <li>The live board shows whose number is currently being served — <strong class="text-white">keep browsing the store</strong> while you wait</li>
+              <li>When your number appears on the board, walk to the dedicated cashier counter</li>
+              <li>The cashier scans all your items and processes payment normally</li>
+              <li>This system helps the store manage peak-hour capacity (weekends, Diwali, etc.) without crowding</li>
+              <li><strong class="text-teal">Have a smartphone?</strong> Use self-scan instead and skip this queue entirely — checkout in &lt;2 min!</li>
+            </ul>
+          </div>
+
+          <div id="q-no-token">
+            <div class="card" style="text-align:center;padding:40px;">
+              <div style="font-size:52px;margin-bottom:14px;">🎫</div>
+              <h3>Join Traditional Queue</h3>
+              <p class="text-muted" style="font-size:13px;margin-bottom:6px;">Current wait: ~12 min · 4 people ahead</p>
+              <p class="text-muted" style="font-size:13px;margin-bottom:20px;">Or <strong class="text-teal" style="cursor:pointer;" onclick="panel('p-scanner','ni-scanner')">use self-scan</strong> and skip entirely!</p>
+              <button class="btn btn-amber" onclick="joinQ()">Get My Token Number</button>
+            </div>
+          </div>
+          <div id="q-has-token" style="display:none;">
+            <div class="card2" style="text-align:center;padding:28px;">
+              <div class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;">Your Token</div>
+              <div class="queue-token-big" id="q-my-token">--</div>
+              <div class="text-muted" style="font-size:13px;" id="q-wait-lbl">Est. wait: ~12 min</div>
+              <div style="margin-top:8px;font-size:14px;" class="text-muted">You are <strong class="text-amber" id="q-pos">4th</strong> in queue</div>
+            </div>
+            <div class="alert alert-ok"><span>📱</span><span><strong>Tip:</strong> You have a smartphone! <strong class="text-teal" style="cursor:pointer;" onclick="panel('p-scanner','ni-scanner')">Switch to self-scan</strong> and skip the queue — checkout in under 2 minutes.</span></div>
+          </div>
+
+          <div class="card"><h3>Live Queue Board</h3><div id="q-live-list"></div></div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="pnl" id="p-history">
+          <div class="pg-title">Shopping History</div>
+          <p class="pg-sub">Your past KartGo trips</p>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="stat-val">4</div><div class="stat-lbl">Total trips</div></div>
+            <div class="stat-box"><div class="stat-val text-teal">72 min</div><div class="stat-lbl">Time saved</div></div>
+            <div class="stat-box"><div class="stat-val">₹3,259</div><div class="stat-lbl">Total spent</div></div>
+            <div class="stat-box"><div class="stat-val text-amber">~18 min</div><div class="stat-lbl">Avg. saved/trip</div></div>
+          </div>
+          <div class="card">
+            <h3>Past Trips</h3>
+            <div id="history-list"></div>
+          </div>
+        </div>
+
+      </div><!-- /main-body -->
+    </div><!-- /main -->
+  </div><!-- /app-layout -->
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 4: EMPLOYEE APP
+════════════════════════════════════════ -->
+<div class="page" id="page-employee">
+  <div class="emp-topbar">
+    <div class="emp-logo">Kart<span>Go</span> <span style="font-size:12px;color:var(--muted2);font-weight:400;">Staff Portal</span></div>
+    <div class="flex-row">
+      <div class="flex-row" style="gap:8px;">
+        <div class="avatar" style="border-color:var(--amber);color:var(--amber);background:var(--amber-dim);" id="emp-av">P</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--white);" id="emp-name">Staff</div>
+          <div style="font-size:11px;color:var(--amber);">Employee</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:16px;" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="emp-tabs">
+    <button class="emp-tab active" id="et-guard" onclick="empTab('etab-guard','et-guard')">🛡 Guard Verification</button>
+    <button class="emp-tab" id="et-queue" onclick="empTab('etab-queue','et-queue')">🎫 Queue Manager</button>
+    <button class="emp-tab" id="et-stats" onclick="empTab('etab-stats','et-stats')">📊 Store Stats</button>
+  </div>
+  <div class="scroller">
+    <div style="padding:28px 32px;">
+
+      <!-- GUARD TAB -->
+      <div id="etab-guard" class="etab active">
+        <div class="pg-title">Guard Verification</div>
+        <p class="pg-sub">Verify customers exiting with self-scanned items</p>
+        <div class="guard-layout">
+          <div>
+            <div class="card">
+              <h3>Customer OTP</h3>
+              <p style="font-size:13px;color:var(--muted2);margin-bottom:10px;">Enter the 4-digit code shown on customer's screen:</p>
+              <input type="number" class="count-input-big" id="g-otp" placeholder="- - - -" maxlength="4" oninput="verifyOTP()"/>
+              <div id="g-otp-res" style="margin-top:8px;"></div>
+            </div>
+            <div class="card">
+              <h3>Physical Item Count</h3>
+              <p style="font-size:13px;color:var(--muted2);margin-bottom:10px;">Count items in customer's bag and enter below:</p>
+              <input type="number" class="count-input-big" id="g-count" placeholder="0" oninput="checkCount()"/>
+              <div id="g-count-res" style="margin-top:8px;font-size:14px;font-weight:600;"></div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-teal" style="flex:1;" id="g-approve" onclick="empApprove()" disabled>✓ Approve &amp; Release</button>
+              <button class="btn btn-red" id="g-flag" onclick="empFlag()" disabled>⚑ Flag</button>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <h3>Session Info</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;"><div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--white);" id="g-s-total">₹0</div><div class="text-muted" style="font-size:12px;">Cart value</div></div>
+                <div style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;"><div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--white);" id="g-s-items">0</div><div class="text-muted" style="font-size:12px;">App items</div></div>
+              </div>
+              <div id="g-spot"><h4>Random Spot-Check</h4><p class="text-muted" style="font-size:13px;padding:10px 0;">Enter OTP above to load spot-check items</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUEUE TAB -->
+      <div id="etab-queue" class="etab">
+        <div class="pg-title">Queue Manager</div>
+        <p class="pg-sub">Manage the traditional cashier queue live</p>
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;">
+          <div>
+            <div class="card" style="text-align:center;">
+              <div style="font-size:36px;margin-bottom:8px;">📢</div>
+              <h3>Now Serving</h3>
+              <div style="font-family:'DM Mono',monospace;font-size:56px;color:var(--amber);line-height:1;margin:8px 0;" id="now-srv">101</div>
+              <button class="btn btn-amber btn-full" style="margin-top:12px;" onclick="callNext()">Call Next →</button>
+            </div>
+            <div class="card2">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span class="text-muted">In queue</span><span class="fw7 text-white" id="q-cnt">4</span></div>
+              <div style="display:flex;justify-content:space-between;"><span class="text-muted">Est. wait</span><span class="fw7 text-amber" id="q-est">~12 min</span></div>
+            </div>
+          </div>
+          <div class="card"><h3>Queue List</h3><div id="emp-q-list"></div></div>
+        </div>
+      </div>
+
+      <!-- STATS TAB -->
+      <div id="etab-stats" class="etab">
+        <div class="pg-title">Store Stats</div>
+        <p class="pg-sub" id="stats-store-lbl">Today's overview</p>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-icon">✅</div><div class="stat-val text-teal">127</div><div class="stat-lbl">Checkouts today</div></div>
+          <div class="stat-box"><div class="stat-icon">⚑</div><div class="stat-val text-red">3</div><div class="stat-lbl">Flagged sessions</div></div>
+          <div class="stat-box"><div class="stat-icon">⏱</div><div class="stat-val">1.8 min</div><div class="stat-lbl">Avg. exit time</div></div>
+          <div class="stat-box"><div class="stat-icon">🎫</div><div class="stat-val text-amber">18</div><div class="stat-lbl">Queue tokens used</div></div>
+          <div class="stat-box"><div class="stat-icon">📷</div><div class="stat-val">109</div><div class="stat-lbl">Self-scan checkouts</div></div>
+          <div class="stat-box"><div class="stat-icon">💰</div><div class="stat-val">₹84,250</div><div class="stat-lbl">Revenue today</div></div>
+        </div>
+        <div class="alert alert-ok"><span>📈</span><span>Self-scan adoption: <strong>85.8%</strong> of customers today. Queue wait times down <strong>76%</strong> vs. last month.</span></div>
+        <div class="card">
+          <h3>Barcode Detection Accuracy (Today)</h3>
+          <div id="det-bars"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const CITIES=["Agartala","Agra","Ahmedabad","Aizawl","Ajmer","Akola","Aligarh","Allahabad","Amravati","Amritsar","Anantapur","Asansol","Aurangabad","Bareilly","Belgaum","Bhavnagar","Bhilai","Bhopal","Bhubaneswar","Bikaner","Bokaro","Chandigarh","Chennai","Coimbatore","Cuttack","Dahod","Dehradun","Delhi","Dhanbad","Dibrugarh","Durgapur","Erode","Faridabad","Firozabad","Gandhinagar","Gangtok","Gaya","Ghaziabad","Gorakhpur","Gulbarga","Guntur","Gurgaon","Guwahati","Gwalior","Howrah","Hubballi","Hyderabad","Imphal","Indore","Itanagar","Jabalpur","Jaipur","Jalandhar","Jammu","Jamnagar","Jamshedpur","Jhansi","Jodhpur","Kakinada","Kalyan","Kanpur","Karimnagar","Kochi","Kohima","Kolhapur","Kolkata","Kollam","Kota","Kozhikode","Kurnool","Latur","Lucknow","Ludhiana","Madurai","Mangaluru","Mathura","Meerut","Moradabad","Mumbai","Mysuru","Nagpur","Nanded","Nasik","Nellore","Noida","Panaji","Patna","Pondicherry","Pune","Raipur","Rajkot","Rajahmundry","Ranchi","Rourkela","Sagar","Salem","Sangli","Shillong","Shimla","Silchar","Siliguri","Solapur","Srinagar","Surat","Thane","Thiruvananthapuram","Thrissur","Tiruchirappalli","Tirunelveli","Tirupati","Udaipur","Ujjain","Vadodara","Varanasi","Vasai","Vijayawada","Visakhapatnam","Warangal","Yamuna Nagar"].sort();
+
+const PRODS=[
+  {n:'Amul Full Cream Milk 1L',b:'Amul',p:66,ic:'🥛',cat:'dairy',upc:'8901063023116'},
+  {n:'Britannia Brown Bread',b:'Britannia',p:40,ic:'🍞',cat:'bakery',upc:'8901063021600'},
+  {n:'Lays Classic Chips 52g',b:'PepsiCo',p:20,ic:'🥔',cat:'snacks',upc:'8901522000068'},
+  {n:'India Gate Basmati 1kg',b:'KRBL',p:145,ic:'🍚',cat:'grains',upc:'8904202410016'},
+  {n:'Eggs 12 pcs',b:'Farm Fresh',p:90,ic:'🥚',cat:'dairy',upc:'0000000000001'},
+  {n:'Kissan Mixed Fruit Jam 200g',b:'Kissan',p:105,ic:'🍓',cat:'condiments',upc:'8901063850027'},
+  {n:'Real Orange Juice 1L',b:'Dabur',p:99,ic:'🍊',cat:'bev',upc:'8901207028342'},
+  {n:'Bisleri Water 1L',b:'Bisleri',p:20,ic:'💧',cat:'bev',upc:'8906006370012'},
+  {n:'Surf Excel Easy Wash 1kg',b:'HUL',p:185,ic:'🧺',cat:'personal',upc:'8901030503015'},
+  {n:'Colgate MaxFresh 150g',b:'Colgate',p:68,ic:'🪥',cat:'personal',upc:'8901314015468'},
+  {n:'Saffola Gold Oil 1L',b:'Saffola',p:175,ic:'🫙',cat:'oils',upc:'8901891001032'},
+  {n:'Maggi Noodles 70g',b:'Nestlé',p:14,ic:'🍜',cat:'snacks',upc:'8901058000593'},
+  {n:'Tata Tea Premium 250g',b:'Tata',p:95,ic:'🍵',cat:'bev',upc:'8901844000135'},
+  {n:'Parle-G Biscuits 400g',b:'Parle',p:45,ic:'🍪',cat:'snacks',upc:'8901719110832'},
+  {n:'Mother Dairy Curd 400g',b:'Mother Dairy',p:50,ic:'🥄',cat:'dairy',upc:'8901099044025'},
+  {n:'Aashirvaad Atta 5kg',b:'ITC',p:260,ic:'🌾',cat:'grains',upc:'8901725130038'},
+  {n:'Haldirams Bhujia 400g',b:'Haldirams',p:130,ic:'🧆',cat:'snacks',upc:'8906002300018'},
+  {n:'Horlicks 500g',b:'HUL',p:220,ic:'🥤',cat:'bev',upc:'8901058004218'},
+  {n:'Dettol Handwash 200ml',b:'Reckitt',p:80,ic:'🫧',cat:'personal',upc:'8901396061559'},
+  {n:'Fortune Sunflower Oil 1L',b:'Adani Wilmar',p:155,ic:'🌻',cat:'oils',upc:'8906001300013'},
+];
+const CAT_L={dairy:'Dairy',bakery:'Bakery',snacks:'Snacks',grains:'Grains',bev:'Beverages',condiments:'Condiments',personal:'Personal Care',oils:'Oils'};
+const CAT_C={dairy:'#00e5a0',bakery:'#f5a623',snacks:'#ff7849',grains:'#a78bfa',bev:'#38bdf8',condiments:'#f472b6',personal:'#34d399',oils:'#fbbf24'};
+const CIRC=2*Math.PI*48; // 301.6
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let role='customer';
+let userData={};
+let cart=[];
+let budget=500;
+let otpV=null,otpR=180,otpIv=null,otpExp=false;
+let camOn=false;
+let myToken=null;
+let nowSrv=101;
+let empOTP=null;
+const QDATA=[
+  {t:101,n:'Rajesh Kumar',i:12,s:'active'},
+  {t:102,n:'Sneha Patil',i:7,s:'wait'},
+  {t:103,n:'Mohan Verma',i:20,s:'wait'},
+  {t:104,n:'Priya Singh',i:5,s:'wait'},
+];
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+(function init(){
+  const sel=document.getElementById('reg-city');
+  CITIES.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  renderProds('');
+  renderQLive();
+  renderEmpQ();
+  renderHistory();
+  renderDetBars();
+  setGreeting();
+})();
+
+function setGreeting(){
+  const h=new Date().getHours();
+  
+  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening'; document.getElementById('home-greeting').textContent=g+' 👋';
+}
+
+// ═══════════════════════════════════════════
+// PAGE / PANEL NAVIGATION
+// ═══════════════════════════════════════════
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const el=document.getElementById(id);
+  el.classList.add('active');
+  el.classList.add('page-anim');
+  setTimeout(()=>el.classList.remove('page-anim'),400);
+}
+
+function panel(pid,nid){
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(pid).classList.add('active');
+  if(nid)document.getElementById(nid).classList.add('active');
+  const titles={
+    'p-home':'Home','p-scanner':'Scanner','p-cart':'Cart',
+    'p-checkout':'Checkout','p-budget':'Budget Tracker',
+    'p-queue':'Queue Token','p-history':'History'
+  };
+  document.getElementById('topbar-title').textContent=titles[pid]||'';
+  if(pid==='p-cart')renderCart();
+  if(pid==='p-budget')renderBudget();
+  if(pid==='p-checkout')renderCheckout();
+  if(pid==='p-queue')renderQLive();
+  if(pid==='p-home')updateHomeStats();
+}
+
+// ═══════════════════════════════════════════
+// ROLE & REGISTRATION
+// ═══════════════════════════════════════════
+function pickRole(r){
+  role=r;
+  const badge=document.getElementById('reg-role-badge');
+  if(r==='customer'){
+    badge.innerHTML='<span class="role-pill-badge rpb-customer">🛒 Customer</span>';
+    document.getElementById('emp-code-fg').style.display='none';
+    document.getElementById('reg-title').textContent='Create your customer account';
+  } else {
+    badge.innerHTML='<span class="role-pill-badge rpb-employee">🏪 Employee</span>';
+    document.getElementById('emp-code-fg').style.display='block';
+    document.getElementById('reg-title').textContent='Create your staff account';
+  }
+  go('page-register');
+}
+
+function calcAge(){
+  const dob=document.getElementById('reg-dob').value;
+  if(!dob)return;
+  const today=new Date(),birth=new Date(dob);
+  let age=today.getFullYear()-birth.getFullYear();
+  const m=today.getMonth()-birth.getMonth();
+  if(m<0||(m===0&&today.getDate()<birth.getDate()))age--;
+  const el=document.getElementById('age-display');
+  const val=document.getElementById('age-val');
+  if(age>=0&&age<120){
+    val.textContent=age;
+    el.style.display='inline-flex';
+  } else {
+    el.style.display='none';
+  }
+}
+
+function googleSignIn(){
+  const fname=['Arjun','Priya','Rahul','Sneha','Vikram','Kavita','Rohit','Anjali'];
+  const lname=['Sharma','Patel','Kumar','Verma','Singh','Gupta','Mehta','Rao'];
+  const fn=fname[Math.floor(Math.random()*fname.length)];
+  const ln=lname[Math.floor(Math.random()*lname.length)];
+  document.getElementById('reg-fname').value=fn;
+  document.getElementById('reg-lname').value=ln;
+  showToast('✓ Google account connected: '+fn+' '+ln);
+}
+
+function submitReg(){
+  const fn=document.getElementById('reg-fname').value.trim();
+  const ln=document.getElementById('reg-lname').value.trim();
+  const dob=document.getElementById('reg-dob').value;
+  const city=document.getElementById('reg-city').value;
+  const phone=document.getElementById('reg-phone').value.trim();
+  if(!fn){showToast('⚠ Enter your first name');return;}
+  if(!ln){showToast('⚠ Enter your last name');return;}
+  if(!dob){showToast('⚠ Select your date of birth');return;}
+  if(!city){showToast('⚠ Select your city');return;}
+  if(role==='employee'){
+    const ec=document.getElementById('reg-empcode').value.trim();
+    if(!ec){showToast('⚠ Enter your employee ID');return;}
+  }
+  userData={fn,ln,city,phone,dob,role};
+  const initials=(fn[0]+(ln[0]||'')).toUpperCase();
+  const displayName=fn+' '+ln[0]+'.';
+  if(role==='customer'){
+    document.getElementById('c-avatar').textContent=initials;
+    document.getElementById('c-avatar-top').textContent=initials;
+    document.getElementById('c-uname').textContent=displayName;
+    document.getElementById('topbar-store').textContent='DMart · '+city;
+    document.getElementById('hs-budget').textContent='₹'+budget;
+    go('page-customer');
+    updateHomeStats();
+  } else {
+    document.getElementById('emp-av').textContent=initials;
+    document.getElementById('emp-name').textContent=displayName;
+    document.getElementById('stats-store-lbl').textContent='Today\'s overview — DMart, '+city;
+    go('page-employee');
+    showToast('Welcome, '+fn+'! Staff portal ready.');
+  }
+}
+
+function logout(){
+  cart=[];otpV=null;if(otpIv)clearInterval(otpIv);
+  camOn=false;myToken=null;userData={};
+  try{Quagga.stop();}catch(e){}
+  const v=document.getElementById('camera-video');
+  if(v&&v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;v.style.display='none';}
+  go('page-landing');
+  showToast('Signed out successfully');
+}
+
+// ═══════════════════════════════════════════
+// CAMERA SCANNER
+// ═══════════════════════════════════════════
+function toggleCam(){
+  if(!camOn)startCam(); else stopCam();
+}
+function startCam(){
+  const video=document.getElementById('camera-video');
+  const btn=document.getElementById('cam-btn');
+  const status=document.getElementById('cam-status-bar');
+  const hint=document.getElementById('cam-hint');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showToast('⚠ Camera not supported — use Products tab');return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}})
+    .then(stream=>{
+      video.srcObject=stream;video.style.display='block';
+      camOn=true;btn.textContent='⏹ Stop Camera';
+      status.style.display='block';status.textContent='🔍 Scanning for barcodes...';
+      hint.textContent='Point at any UPC / EAN barcode';
+      video.play().then(()=>{
+        Quagga.init({
+          inputStream:{type:'LiveStream',target:video,constraints:{facingMode:'environment'}},
+          locator:{patchSize:'medium',halfSample:true},
+          numOfWorkers:2,frequency:10,
+          decoder:{readers:['upc_reader','ean_reader','ean_8_reader','code_128_reader']},
+          locate:true
+        },err=>{if(err){status.textContent='⚠ Scanner init failed — use Products tab';}});
+        let lastCode='',lastTime=0;
+        Quagga.onDetected(d=>{
+          const code=d.codeResult.code;
+          const now=Date.now();
+          if(code===lastCode&&now-lastTime<2500)return;
+          lastCode=code;lastTime=now;
+          status.textContent='✓ Detected: '+code;
+          addByUPC(code);
+        });
+      });
+    })
+    .catch(()=>{
+      showToast('📷 Camera permission denied — use Products tab');
+      hint.textContent='Camera unavailable — use Products tab';
+    });
+}
+function stopCam(){
+  const video=document.getElementById('camera-video');
+  if(video.srcObject){video.srcObject.getTracks().forEach(t=>t.stop());video.srcObject=null;}
+  video.style.display='none';
+  try{Quagga.stop();}catch(e){}
+  camOn=false;
+  document.getElementById('cam-btn').textContent='📷 Enable Camera';
+  document.getElementById('cam-status-bar').style.display='none';
+}
+function addByUPC(code){
+  const p=PRODS.find(x=>x.upc===code);
+  addToCart(p||{n:'Unknown ('+code.slice(-6)+')',b:'Scanned',p:0,ic:'📦',cat:'other',upc:code});
+}
+
+// ═══════════════════════════════════════════
+// SCANNER MODES
+// ═══════════════════════════════════════════
+function setMode(m){
+  ['cam','list','manual'].forEach(x=>{
+    document.getElementById('mt-'+x).classList.toggle('active',x===m);
+    document.getElementById('mode-'+x).style.display=(x===m?'block':'none');
+  });
+  if(m!=='cam'&&camOn)stopCam();
+}
+function renderProds(q){
+  const grid=document.getElementById('prod-grid');
+  const chips=document.getElementById('quick-chips');
+  if(!grid)return;
+  const filtered=PRODS.filter(p=>!q||p.n.toLowerCase().includes(q.toLowerCase())||p.b.toLowerCase().includes(q.toLowerCase()));
+  grid.innerHTML=filtered.map((p,i)=>`
+    <div class="prod-item" onclick="addToCartByObj(${PRODS.indexOf(p)})">
+      <span class="pi-icon">${p.ic}</span>
+      <div style="flex:1;min-width:0;"><div class="pi-name">${p.n}</div><div class="pi-brand">${p.b}</div></div>
+      <span class="pi-price">₹${p.p}</span>
+      <button class="pi-add" id="pia-${PRODS.indexOf(p)}" onclick="event.stopPropagation();addToCartByObj(${PRODS.indexOf(p)})">+</button>
+    </div>`).join('')||'<p class="text-muted" style="font-size:13px;padding:12px 0;">No products found</p>';
+  if(chips)chips.innerHTML=PRODS.slice(0,10).map((p,i)=>`
+    <div onclick="addToCartByObj(${i})" style="background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--muted2);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.4)'" onmouseout="this.style.borderColor='var(--border)'">${p.ic} ${p.n.split(' ')[0]}</div>`).join('');
+}
+function addToCartByObj(i){
+  addToCart(PRODS[i]);
+  const btn=document.getElementById('pia-'+i);
+  if(btn){btn.textContent='✓';btn.classList.add('done');setTimeout(()=>{btn.textContent='+';btn.classList.remove('done');},900);}
+}
+function manualAdd(){
+  const val=document.getElementById('manual-inp').value.trim();
+  if(!val)return;
+  const p=PRODS.find(x=>x.upc===val||x.n.toLowerCase().includes(val.toLowerCase()));
+  addToCart(p||{n:val,b:'Manual',p:0,ic:'📦',cat:'other',upc:''});
+  document.getElementById('manual-inp').value='';
+}
+
+// ═══════════════════════════════════════════
+// CART
+// ═══════════════════════════════════════════
+function addToCart(p){
+  const ex=cart.find(i=>i.n===p.n);
+  if(ex)ex.qty++;
+  else cart.push({...p,qty:1});
+  updateStrip();
+  showToast('✓ '+p.n.split(' ').slice(0,3).join(' ')+' added');
+  updateCartBadge();
+}
+function cartTotal(){return cart.reduce((s,i)=>s+i.p*i.qty,0);}
+function cartCount(){return cart.reduce((s,i)=>s+i.qty,0);}
+function updateStrip(){
+  document.getElementById('strip-total').textContent='₹'+cartTotal();
+  document.getElementById('strip-count').textContent=cartCount();
+}
+function updateCartBadge(){
+  const nb=document.getElementById('cart-nb');
+  const c=cartCount();
+  nb.textContent=c;nb.style.display=c>0?'inline-flex':'none';
+}
+function renderCart(){
+  const tot=cartTotal(),cnt=cartCount();
+  updateCartBadge();
+  document.getElementById('cart-empty').style.display=cart.length===0?'block':'none';
+  document.getElementById('cart-filled').style.display=cart.length===0?'none':'block';
+  document.getElementById('cart-sub-lbl').textContent=cart.length===0?'Your scanned items will appear here':cnt+' item'+(cnt!==1?'s':'')+' · ₹'+tot;
+  if(cart.length===0)return;
+  const alertArea=document.getElementById('cart-alert-area');
+  const pct=(tot/budget)*100;
+  if(pct>=100)alertArea.innerHTML=`<div class="alert alert-danger"><span>⚠️</span><span>Over budget by ₹${tot-budget}! Consider removing some items.</span></div>`;
+  else if(pct>=80)alertArea.innerHTML=`<div class="alert alert-warn"><span>⚠️</span><span>${Math.round(pct)}% of budget used. ₹${budget-tot} remaining.</span></div>`;
+  else alertArea.innerHTML='';
+  document.getElementById('cart-items-card').innerHTML=cart.map((it,i)=>`
+    <div class="cart-item">
+      <div class="ci-icon">${it.ic}</div>
+      <div class="ci-info"><div class="ci-name">${it.n}</div><div class="ci-sub">₹${it.p} each · ${it.b}</div></div>
+      <div class="ci-ctrl">
+        <button class="qty-btn" onclick="chgQty(${i},-1)">−</button>
+        <span class="qty-num">${it.qty}</span>
+        <button class="qty-btn" onclick="chgQty(${i},1)">+</button>
+      </div>
+      <div class="ci-price">₹${it.p*it.qty}</div>
+      <button class="ci-del" onclick="delItem(${i})">🗑</button>
+    </div>`).join('');
+  document.getElementById('cart-sub-val').textContent='₹'+tot;
+  document.getElementById('cart-count-val').textContent=cnt+' items';
+  document.getElementById('cart-total-big').textContent='₹'+tot;
+}
+function chgQty(i,d){cart[i].qty=Math.max(1,cart[i].qty+d);renderCart();updateStrip();}
+function delItem(i){cart.splice(i,1);renderCart();updateStrip();updateCartBadge();}
+function clearCart(){if(confirm('Clear all items from cart?')){cart=[];renderCart();updateStrip();updateCartBadge();}}
+
+// ═══════════════════════════════════════════
+// CHECKOUT
+// ═══════════════════════════════════════════
+function renderCheckout(){
+  const tot=cartTotal(),cnt=cartCount();
+  document.getElementById('checkout-total').textContent='₹'+tot;
+  document.getElementById('checkout-items').innerHTML=cart.length===0
+    ?'<p class="text-muted" style="text-align:center;padding:20px;">No items in cart.</p>'
+    :cart.map(it=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span>${it.ic}</span>
+          <div><div style="font-size:13px;font-weight:600;color:var(--white);">${it.n}</div><div class="text-muted" style="font-size:11px;">×${it.qty}</div></div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;color:var(--white);">₹${it.p*it.qty}</div>
+      </div>`).join('');
+  if(!otpV||otpExp)generateOTP();
+  generateQR(tot,cnt);
+}
+function generateOTP(){
+  if(otpIv)clearInterval(otpIv);
+  otpV=Math.floor(1000+Math.random()*9000).toString();
+  otpR=180;otpExp=false;
+  empOTP=otpV; // share with employee panel
+  document.getElementById('otp-digits').textContent=otpV;
+  document.getElementById('otp-big-display').textContent=otpV;
+  document.getElementById('otp-digits').style.animation='';
+  document.getElementById('otp-status').textContent='Show this to the guard at exit';
+  document.getElementById('regen-btn').style.display='none';
+  updateRing();
+  otpIv=setInterval(otpTick,1000);
+}
+function otpTick(){
+  otpR--;
+  if(otpR<=0){
+    clearInterval(otpIv);otpExp=true;
+    document.getElementById('otp-digits').style.animation='blink 1s infinite';
+    document.getElementById('otp-digits').textContent='EXP';
+    document.getElementById('otp-big-display').textContent='EXPIRED';
+    document.getElementById('otp-timer').textContent='Expired';
+    document.getElementById('otp-status').textContent='OTP expired — tap New OTP to regenerate';
+    document.getElementById('regen-btn').style.display='inline-flex';
+    document.getElementById('ring-fill').style.stroke='var(--red)';
+    return;
+  }
+  updateRing();
+}
+function updateRing(){
+  const pct=otpR/180;
+  document.getElementById('ring-fill').style.strokeDashoffset=CIRC*(1-pct);
+  const m=Math.floor(otpR/60),s=otpR%60;
+  document.getElementById('otp-timer').textContent=m+':'+(s<10?'0':'')+s;
+  if(otpR<=30)document.getElementById('ring-fill').style.stroke='var(--red)';
+  else if(otpR<=60)document.getElementById('ring-fill').style.stroke='var(--amber)';
+  else document.getElementById('ring-fill').style.stroke='var(--teal)';
+}
+function regenOTP(){generateOTP();generateQR(cartTotal(),cartCount());}
+function generateQR(tot,cnt){
+  const qrc=document.getElementById('qr-container');
+  qrc.innerHTML='';
+  const payload=JSON.stringify({otp:otpV,total:tot,items:cnt,ts:Date.now(),store:'DMart '+userData.city,user:userData.fn+' '+userData.ln});
+  new QRCode(qrc,{text:payload,width:160,height:160,colorDark:'#07090f',colorLight:'#ffffff'});
+}
+function markPaid(){
+  if(otpIv)clearInterval(otpIv);
+  showToast('✓ Payment marked! Proceed to the exit guard.');
+}
+
+// ═══════════════════════════════════════════
+// BUDGET
+// ═══════════════════════════════════════════
+function renderBudget(){
+  const tot=cartTotal(),pct=Math.min((tot/budget)*100,100),rem=Math.max(0,budget-tot);
+  document.getElementById('b-spent').textContent='₹'+tot;
+  document.getElementById('b-left').textContent='₹'+rem;
+  document.getElementById('b-left').style.color=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--teal)';
+  document.getElementById('b-bar').style.width=pct+'%';
+  document.getElementById('b-bar').style.background=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--teal)';
+  document.getElementById('b-pct').textContent=Math.round(pct)+'% used';
+  document.getElementById('b-lim').textContent=budget;
+  const cats={};cart.forEach(it=>{const c=it.cat||'other';cats[c]=(cats[c]||0)+it.p*it.qty;});
+  const maxV=Math.max(...Object.values(cats),1);
+  document.getElementById('cat-bars').innerHTML=Object.keys(cats).length===0
+    ?'<p class="text-muted" style="font-size:13px;">No items in cart yet.</p>'
+    :Object.entries(cats).map(([c,v])=>`
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:13px;" class="text-muted">${CAT_L[c]||c}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--white);">₹${v}</span>
+        </div>
+        <div class="bbar-wrap"><div class="bbar-fill" style="width:${(v/maxV*100)}%;background:${CAT_C[c]||'var(--teal)'};"></div></div>
+      </div>`).join('');
+}
+function setBudget(){const v=parseInt(document.getElementById('b-input').value);if(v>0){budget=v;renderBudget();document.getElementById('hs-budget').textContent='₹'+v;showToast('Budget updated: ₹'+v);}}
+
+// ═══════════════════════════════════════════
+// HOME STATS
+// ═══════════════════════════════════════════
+function updateHomeStats(){
+  document.getElementById('hs-items').textContent=cartCount();
+  document.getElementById('hs-budget').textContent='₹'+budget;
+}
+
+// ═══════════════════════════════════════════
+// QUEUE (customer side)
+// ═══════════════════════════════════════════
+function joinQ(){
+  myToken=105;
+  const pos=QDATA.length;
+  document.getElementById('q-my-token').textContent=myToken;
+  document.getElementById('q-pos').textContent=pos+'th';
+  document.getElementById('q-wait-lbl').textContent='Est. wait: ~'+(pos*3)+' min';
+  document.getElementById('q-no-token').style.display='none';
+  document.getElementById('q-has-token').style.display='block';
+  showToast('🎫 Token #'+myToken+' issued!');
+}
+function renderQLive(){
+  const el=document.getElementById('q-live-list');
+  if(!el)return;
+  el.innerHTML=QDATA.map(q=>`
+    <div class="queue-row">
+      <div class="q-badge">${q.t}</div>
+      <div class="q-info"><div class="q-name">${q.n}</div><div class="q-sub">${q.i} items</div></div>
+      <span class="tag ${q.s==='active'?'tag-green':'tag-amber'}">${q.s==='active'?'At cashier':'Waiting'}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════
+function renderHistory(){
+  const el=document.getElementById('history-list');
+  if(!el)return;
+  const trips=[
+    {ic:'🏪',s:'DMart, Amravati',d:'Apr 14 · 9 items · 21 min saved',a:'₹712',t:'tag-green',l:'Under budget'},
+    {ic:'🛒',s:'Reliance Fresh, Nanded',d:'Apr 10 · 16 items · 19 min saved',a:'₹1,340',t:'tag-red',l:'Over budget'},
+    {ic:'🏪',s:'DMart, Amravati',d:'Apr 5 · 5 items · 17 min saved',a:'₹318',t:'tag-green',l:'Under budget'},
+    {ic:'🛒',s:'Big Bazaar, Aurangabad',d:'Mar 30 · 11 items · 15 min saved',a:'₹889',t:'tag-amber',l:'On budget'},
+  ];
+  el.innerHTML=trips.map(({ic,s,d,a,t,l})=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="width:42px;height:42px;background:var(--teal-glow);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${ic}</div>
+      <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:var(--white);">${s}</div><div class="text-muted" style="font-size:12px;">${d}</div></div>
+      <div style="text-align:right;"><div style="font-family:'DM Mono',monospace;color:var(--white);">${a}</div><span class="tag ${t}">${l}</span></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// EMPLOYEE — GUARD
+// ═══════════════════════════════════════════
+function verifyOTP(){
+  const v=document.getElementById('g-otp').value.trim();
+  const res=document.getElementById('g-otp-res');
+  if(v.length!==4){res.innerHTML='';return;}
+  document.getElementById('g-s-total').textContent='₹'+cartTotal();
+  document.getElementById('g-s-items').textContent=cartCount();
+  if(v===empOTP){
+    res.innerHTML='<div class="alert alert-ok" style="margin:0;"><span>✅</span> OTP verified — session loaded!</div>';
+    loadSpot();
+    document.getElementById('g-approve').disabled=false;
+    document.getElementById('g-flag').disabled=false;
+  } else {
+    res.innerHTML='<div class="alert alert-danger" style="margin:0;"><span>❌</span> OTP not found. Ask customer to open their checkout screen.</div>';
+    document.getElementById('g-approve').disabled=true;
+    document.getElementById('g-flag').disabled=true;
+  }
+}
+function loadSpot(){
+  const sh=[...cart].sort(()=>Math.random()-0.5).slice(0,Math.min(3,cart.length));
+  document.getElementById('g-spot').innerHTML='<h4>Random Spot-Check</h4><p class="text-muted" style="font-size:13px;margin-bottom:10px;">Physically locate these items in the customer\'s bag:</p>'
+    +(sh.length===0?'<p class="text-muted" style="font-size:13px;">Cart is empty.</p>'
+    :sh.map((it,i)=>`
+      <div class="spot-row">
+        <div class="spot-check" id="sp-${i}" onclick="toggleSp(${i})"> </div>
+        <span style="font-size:20px;">${it.ic}</span>
+        <div><div style="font-size:14px;font-weight:600;color:var(--white);">${it.n}</div>
+        <div class="text-muted" style="font-size:12px;">Qty: ${it.qty} · UPC: ${it.upc||'N/A'}</div></div>
+      </div>`).join(''));
+}
+function toggleSp(i){const e=document.getElementById('sp-'+i);e.classList.toggle('checked');e.textContent=e.classList.contains('checked')?'✓':' ';}
+function checkCount(){
+  const en=parseInt(document.getElementById('g-count').value);
+  const ex=cartCount();
+  const r=document.getElementById('g-count-res');
+  if(isNaN(en)){r.innerHTML='';return;}
+  if(en===ex)r.innerHTML='<span style="color:var(--teal);">✓ Count matches — '+ex+' items confirmed</span>';
+  else{const d=en-ex;r.innerHTML='<span style="color:var(--red);">⚑ Mismatch: app shows '+ex+', physical = '+en+' ('+(d>0?'+':'')+d+')</span>';}
+}
+function empApprove(){
+  cart=[];updateStrip();updateCartBadge();
+  ['g-otp','g-count'].forEach(id=>document.getElementById(id).value='');
+  ['g-otp-res','g-count-res'].forEach(id=>document.getElementById(id).innerHTML='');
+  document.getElementById('g-approve').disabled=true;document.getElementById('g-flag').disabled=true;
+  document.getElementById('g-spot').innerHTML='<h4>Random Spot-Check</h4><p class="text-muted" style="font-size:13px;padding:8px 0;">Enter OTP above to load spot-check items</p>';
+  document.getElementById('g-s-total').textContent='₹0';document.getElementById('g-s-items').textContent='0';
+  empOTP=null;
+  showToast('✓ Customer approved & released! RFID tags cleared.');
+}
+function empFlag(){
+  showToast('⚑ Session flagged for manual inspection');
+  document.getElementById('g-approve').disabled=true;document.getElementById('g-flag').disabled=true;
+}
+
+// ═══════════════════════════════════════════
+// EMPLOYEE — QUEUE MANAGER
+// ═══════════════════════════════════════════
+function empTab(tabId,btnId){
+  document.querySelectorAll('.etab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.emp-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  document.getElementById(btnId).classList.add('active');
+}
+function callNext(){
+  nowSrv++;document.getElementById('now-srv').textContent=nowSrv;
+  const rem=QDATA.filter(q=>q.t>nowSrv).length;
+  document.getElementById('q-cnt').textContent=rem;
+  document.getElementById('q-est').textContent='~'+(rem*3)+' min';
+  showToast('📢 Now calling token #'+nowSrv);
+}
+function renderEmpQ(){
+  const el=document.getElementById('emp-q-list');
+  if(!el)return;
+  el.innerHTML=QDATA.map(q=>`
+    <div class="queue-row">
+      <div class="q-badge">${q.t}</div>
+      <div class="q-info"><div class="q-name">${q.n}</div><div class="q-sub">${q.i} items · traditional checkout</div></div>
+      <span class="tag ${q.s==='active'?'tag-green':'tag-amber'}">${q.s==='active'?'At cashier':'Waiting'}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// EMPLOYEE — STATS
+// ═══════════════════════════════════════════
+function renderDetBars(){
+  const el=document.getElementById('det-bars');
+  if(!el)return;
+  const rows=[['Standard lighting (400 lux)','93.7%','var(--teal)'],['Low light (100 lux)','74.3%','var(--amber)'],['High glare (800 lux)','81.2%','var(--amber)'],['Curved / bottle labels','61.3%','var(--red)'],['Abraded / damaged labels','72.8%','var(--amber)']];
+  el.innerHTML=rows.map(([l,v,c])=>`
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="text-muted" style="font-size:13px;">${l}</span><span style="font-size:13px;font-weight:600;color:${c};">${v}</span></div>
+      <div class="bbar-wrap"><div class="bbar-fill" style="width:${v};background:${c};"></div></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function showToast(m,col){
+  const t=document.getElementById('toast');
+  t.textContent=m;
+  t.style.background=col||'var(--teal)';
+  t.style.color=col?'#fff':'#07090f';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>
